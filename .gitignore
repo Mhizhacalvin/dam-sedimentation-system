@@ -1,0 +1,6 @@
+venv/
+sedapp.db
+data/
+outputs/
+__pycache__/
+*.pyc
