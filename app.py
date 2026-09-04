@@ -294,6 +294,9 @@ def download_volume_csv(survey_id):
     return send_file(mem, as_attachment=True, download_name=f"survey_{survey_id}_volume_table.csv", mimetype="text/csv")
 
 
+db.init_db()  # also runs when imported by gunicorn in production
+
 if __name__ == "__main__":
-    db.init_db()
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "1") == "1"
+    app.run(debug=debug, host="0.0.0.0", port=port)

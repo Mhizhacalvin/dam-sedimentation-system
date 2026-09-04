@@ -8,3 +8,4 @@ fiona>=1.9
 shapely>=2.0
 pyproj>=3.6
 PyKrige>=1.7
+gunicorn>=21.2
