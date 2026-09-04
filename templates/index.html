@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Surveys</h1>
+  <p class="muted">Start a new bathymetric survey workflow, or continue an existing one.</p>
+  <a class="btn btn-primary" href="{{ url_for('team') }}">+ New Survey</a>
+</div>
+
+<div class="card">
+  <table class="table">
+    <thead>
+      <tr><th>ID</th><th>Dam</th><th>Date</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for s in surveys %}
+      <tr>
+        <td>{{ s.id }}</td>
+        <td>{{ s.dam_name }}</td>
+        <td>{{ s.survey_date }}</td>
+        <td><span class="badge badge-{{ s.status }}">{{ s.status }}</span></td>
+        <td>
+          {% if s.status == 'team' %}
+            <a href="{{ url_for('team') }}">continue</a>
+          {% elif s.status == 'upload' %}
+            <a href="{{ url_for('upload', survey_id=s.id) }}">upload data</a>
+          {% else %}
+            <a href="{{ url_for('workspace', survey_id=s.id) }}">open workspace</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="muted">No surveys yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Step 1 &middot; Survey Team</h1>
+  <p class="muted">Register the field team (up to {{ max_team }} people). <strong>{{ required_roles|join(', ') }}</strong>
+     are mandatory roles and cannot be left blank or removed.</p>
+
+  {% if errors %}
+  <div class="alert alert-error">
+    <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+
+  <form method="POST" id="team-form">
+    <div class="grid-2">
+      <label>Dam / Reservoir name
+        <input type="text" name="dam_name" value="{{ dam_name }}" required>
+      </label>
+      <label>Survey date
+        <input type="date" name="survey_date" value="{{ survey_date }}" required>
+      </label>
+      <label>Working CRS (projected, meters) EPSG code
+        <input type="number" name="crs_epsg" value="{{ crs_epsg }}" required>
+        <small class="muted">e.g. 32735 = WGS84 / UTM 35S (typical for Zimbabwe), 20935 = Arc 1950 / UTM 35S</small>
+      </label>
+    </div>
+
+    <h3>Team members</h3>
+    <table class="table" id="team-table">
+      <thead><tr><th style="width:45%">Name</th><th>Role</th><th></th></tr></thead>
+      <tbody>
+        {% for m in members %}
+        <tr>
+          <td><input type="text" name="member_name" value="{{ m.name }}" placeholder="Full name"
+                     required="{{ 'required' if m.role in required_roles else '' }}"></td>
+          <td>
+            <select name="member_role" class="role-select" {{ 'data-required=1' if m.role in required_roles else '' }}>
+              {% for r in required_roles %}
+                <option value="{{ r }}" {{ 'selected' if m.role==r else '' }}>{{ r }}</option>
+              {% endfor %}
+              <option value="Data Recorder" {{ 'selected' if m.role=='Data Recorder' else '' }}>Data Recorder</option>
+              <option value="Safety Officer" {{ 'selected' if m.role=='Safety Officer' else '' }}>Safety Officer</option>
+              <option value="Field Assistant" {{ 'selected' if m.role=='Field Assistant' else '' }}>Field Assistant</option>
+              <option value="Team Leader" {{ 'selected' if m.role=='Team Leader' else '' }}>Team Leader</option>
+            </select>
+          </td>
+          <td>
+            {% if m.role in required_roles %}
+              <span class="muted small">required</span>
+            {% else %}
+              <button type="button" class="btn-remove" onclick="removeRow(this)">&times;</button>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button type="button" class="btn btn-secondary" id="add-row-btn" onclick="addRow()">+ Add team member</button>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save team &amp; continue &rarr;</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const MAX_TEAM = {{ max_team }};
+function rowCount() { return document.querySelectorAll('#team-table tbody tr').length; }
+function addRow() {
+  if (rowCount() >= MAX_TEAM) { alert('Maximum team size is ' + MAX_TEAM + ' people.'); return; }
+  const tbody = document.querySelector('#team-table tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" name="member_name" placeholder="Full name" required></td>
+    <td>
+      <select name="member_role">
+        <option value="Data Recorder">Data Recorder</option>
+        <option value="Safety Officer">Safety Officer</option>
+        <option value="Field Assistant">Field Assistant</option>
+        <option value="Team Leader">Team Leader</option>
+      </select>
+    </td>
+    <td><button type="button" class="btn-remove" onclick="removeRow(this)">&times;</button></td>`;
+  tbody.appendChild(tr);
+  toggleAddBtn();
+}
+function removeRow(btn) {
+  btn.closest('tr').remove();
+  toggleAddBtn();
+}
+function toggleAddBtn() {
+  document.getElementById('add-row-btn').disabled = rowCount() >= MAX_TEAM;
+}
+toggleAddBtn();
+</script>
+{% endblock %}

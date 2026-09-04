@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Step 2 &middot; Ingest Survey Data</h1>
+  <p class="muted">Survey: <strong>{{ survey.dam_name }}</strong> ({{ survey.survey_date }}) &middot;
+     working CRS EPSG:{{ survey.crs_epsg }}</p>
+
+  {% if errors %}
+  <div class="alert alert-error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+  {% endif %}
+
+  {% if datasets %}
+  <div class="alert alert-info">
+    Already ingested:
+    <ul>
+    {% for d in datasets %}
+      <li>{{ d.kind }} &mdash; {{ d.source_filename }} ({{ d.n_points }} points)</li>
+    {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data">
+
+    <fieldset>
+      <legend>Bathymetry survey points <span class="req">required</span></legend>
+      <p class="muted">Depth-sounding points collected on the water (CSV, zipped Shapefile, KML, or GeoJSON).</p>
+      <div class="grid-3">
+        <label>File
+          <input type="file" name="bathymetry_file" accept=".csv,.zip,.kml,.geojson,.json">
+        </label>
+        <label>Source EPSG (CSV only)
+          <input type="number" name="bathymetry_file_source_epsg" placeholder="e.g. 32735">
+        </label>
+        <label>Z / depth field (if not auto-detected)
+          <input type="text" name="bathymetry_file_zfield" placeholder="e.g. depth_m">
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Full Supply Level (FSL) boundary points <span class="req">required</span></legend>
+      <p class="muted">Shoreline / rim points surveyed at Full Supply Level — closes the basin so the DEM covers bottom to rim.</p>
+      <div class="grid-3">
+        <label>File
+          <input type="file" name="fsl_file" accept=".csv,.zip,.kml,.geojson,.json">
+        </label>
+        <label>Source EPSG (CSV only)
+          <input type="number" name="fsl_file_source_epsg" placeholder="e.g. 32735">
+        </label>
+        <label>Z field (if not auto-detected)
+          <input type="text" name="fsl_file_zfield" placeholder="e.g. elevation">
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Outlet / Dead Water level point <span class="muted">(optional file — a coordinate marker; the level itself is entered below)</span></legend>
+      <div class="grid-3">
+        <label>File
+          <input type="file" name="dwl_file" accept=".csv,.zip,.kml,.geojson,.json">
+        </label>
+        <label>Source EPSG (CSV only)
+          <input type="number" name="dwl_file_source_epsg" placeholder="e.g. 32735">
+        </label>
+        <label>Z field (if not auto-detected)
+          <input type="text" name="dwl_file_zfield" placeholder="e.g. elevation">
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Reservoir levels (meters, same vertical datum as your survey)</legend>
+      <div class="grid-4">
+        <label>Full Supply Level (FSL)
+          <input type="number" step="any" name="fsl_elevation" value="{{ survey.fsl_elevation or '' }}" required>
+        </label>
+        <label>Dead Water Level (outlet)
+          <input type="number" step="any" name="dead_water_elevation" value="{{ survey.dead_water_elevation or '' }}" required>
+        </label>
+        <label>Current water level at survey time
+          <input type="number" step="any" name="current_water_elevation" value="{{ survey.current_water_elevation or '' }}" required>
+        </label>
+        <label>Original / design capacity at FSL, m&sup3; <span class="muted">(optional — enables siltation calc)</span>
+          <input type="number" step="any" name="original_design_capacity_m3" value="{{ survey.original_design_capacity_m3 or '' }}">
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Ingest &amp; continue to map &rarr;</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

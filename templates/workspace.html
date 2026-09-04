@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h1>Step 3 &middot; Interpolate, Classify &amp; Compute</h1>
+  <p class="muted">
+    Survey: <strong>{{ survey.dam_name }}</strong> ({{ survey.survey_date }}) &middot;
+    FSL {{ survey.fsl_elevation }} m &middot; DWL {{ survey.dead_water_elevation }} m &middot;
+    Current level {{ survey.current_water_elevation }} m &middot; EPSG:{{ survey.crs_epsg }}
+  </p>
+  <p class="muted small">Team: {% for t in team %}{{ t.name }} ({{ t.role }}){% if not loop.last %}, {% endif %}{% endfor %}</p>
+</div>
+
+<div class="workspace-grid">
+  <div class="card map-card">
+    <div id="map"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="card controls-card">
+    <h3>Ingested data</h3>
+    <ul class="dataset-list">
+      {% for d in datasets %}<li>{{ d.kind }}: {{ d.n_points }} pts</li>{% endfor %}
+    </ul>
+
+    <h3>Interpolation</h3>
+    <label>Method
+      <select id="method">
+        <option value="idw">IDW (Inverse Distance Weighting)</option>
+        <option value="kriging">Ordinary Kriging</option>
+      </select>
+    </label>
+    <div id="idw-params" class="param-group">
+      <label>Power <input type="number" id="idw-power" value="2" step="0.5" min="0.5" max="6"></label>
+      <label>Neighbors (k) <input type="number" id="idw-k" value="12" step="1" min="3" max="50"></label>
+    </div>
+    <div id="krig-params" class="param-group" style="display:none">
+      <label>Variogram model
+        <select id="krig-model">
+          <option value="linear">Linear</option>
+          <option value="power">Power</option>
+          <option value="gaussian">Gaussian</option>
+          <option value="spherical">Spherical</option>
+          <option value="exponential">Exponential</option>
+        </select>
+      </label>
+    </div>
+    <label>Grid cell size (m) <input type="number" id="cell-size" value="5" step="1" min="0.5"></label>
+
+    <button class="btn btn-primary full-width" id="run-btn" onclick="runInterpolation()">Run interpolation &amp; compute volumes</button>
+    <div id="run-status" class="muted small"></div>
+
+    {% if latest %}
+    <div class="downloads">
+      <a href="{{ url_for('download_dem', survey_id=survey.id) }}">Download DEM (GeoTIFF)</a>
+      <a href="{{ url_for('download_volume_csv', survey_id=survey.id) }}">Download Volume Table (CSV)</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" id="siltation-card" style="{{ '' if latest else 'display:none' }}">
+  <h3>Capacity &amp; Siltation Summary</h3>
+  <div id="siltation-summary" class="summary-grid"></div>
+</div>
+
+<div class="card" id="volume-card" style="{{ '' if latest else 'display:none' }}">
+  <h3>Elevation &ndash; Surface Area &ndash; Volume Table</h3>
+  <div class="table-scroll">
+    <table class="table" id="volume-table">
+      <thead>
+        <tr><th>Elevation (m)</th><th>Surface Area (m&sup2;)</th><th>Surface Area (ha)</th>
+            <th>Cumulative Volume (m&sup3;)</th><th>Cumulative Volume (Mm&sup3;)</th><th>Marker</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const SURVEY_ID = {{ survey.id }};
+const CURRENT_LEVEL = {{ survey.current_water_elevation }};
+</script>
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+<script src="{{ url_for('static', filename='js/workspace.js') }}"></script>
+{% if latest %}
+<script>
+window.addEventListener('load', loadResultsFromServer);
+</script>
+{% endif %}
+{% endblock %}
